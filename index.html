@@ -1,0 +1,1714 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DON'T LET THEM IN</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/p5.min.js"></script>
+  <style>
+    @font-face {
+      font-family: "MonaS12";
+      src: url("fonts/MonaS12.woff2") format("woff2");
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "MonaS12";
+      src: url("fonts/MonaS12-Bold.woff2") format("woff2");
+      font-weight: 700;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "MonaS12TextKR";
+      src: url("fonts/MonaS12TextKR.woff2") format("woff2");
+      font-weight: 400 700;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "Mona12ColorEmoji";
+      src: url("fonts/Mona12ColorEmoji.woff2") format("woff2");
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "Mona12Emoji";
+      src: url("fonts/Mona12Emoji.woff2") format("woff2");
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #050709;
+      color: #f3f4f6;
+      font-family: "MonaS12TextKR", "MonaS12", "Mona12ColorEmoji", monospace;
+      font-synthesis: none;
+      text-rendering: geometricPrecision;
+    }
+
+    main {
+      width: min(1320px, 100vw);
+      padding: 12px;
+    }
+
+    #app-shell {
+      display: grid;
+      grid-template-columns: 260px minmax(0, 1fr);
+      gap: 14px;
+      align-items: start;
+    }
+
+    #game-column {
+      min-width: 0;
+      padding: 10px;
+      border: 1px solid rgba(245, 255, 245, 0.42);
+      background:
+        linear-gradient(180deg, rgba(13, 17, 18, 0.94), rgba(2, 3, 4, 0.98));
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.14),
+        inset 0 -4px 0 rgba(0, 0, 0, 0.42),
+        0 0 18px rgba(245, 255, 245, 0.08),
+        0 16px 34px rgba(0, 0, 0, 0.62);
+    }
+
+    #left-hud {
+      display: grid;
+      gap: 12px;
+      grid-template-rows: auto auto minmax(0, 1fr);
+      align-content: stretch;
+    }
+
+    #game-logo-panel {
+      padding: 0 0 2px;
+    }
+
+    #game-logo {
+      display: block;
+      width: 100%;
+      max-height: 148px;
+      height: auto;
+      object-fit: contain;
+    }
+
+    #core-status-panel,
+    #researcher-monitor {
+      border: 1px solid #3d7b42;
+      background:
+        linear-gradient(rgba(118, 255, 112, 0.03) 1px, transparent 1px),
+        radial-gradient(circle at 50% 0%, rgba(102, 255, 104, 0.11), transparent 42%),
+        linear-gradient(180deg, rgba(5, 17, 22, 0.96), rgba(2, 7, 10, 0.99));
+      background-size: 100% 5px, 100% 100%, 100% 100%;
+      box-shadow:
+        inset 0 0 26px rgba(102, 255, 104, 0.075),
+        0 0 28px rgba(0, 0, 0, 0.72);
+      color: #ecffec;
+    }
+
+    #core-status-panel {
+      padding: 14px;
+    }
+
+    .core-row {
+      margin: 0 0 16px;
+    }
+
+    .core-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .core-label {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 10px;
+      color: #cfe8cf;
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+
+    .core-label-name {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .line-icon {
+      width: 16px;
+      height: 16px;
+      color: #74f06a;
+      filter: drop-shadow(0 0 6px rgba(116, 240, 106, 0.45));
+      flex: 0 0 auto;
+    }
+
+    .core-emoji {
+      color: #74f06a;
+      font-family: "Mona12Emoji", "Mona12ColorEmoji", "MonaS12", monospace;
+      font-size: 16px;
+      line-height: 1;
+      text-shadow: 0 0 8px rgba(116, 240, 106, 0.45);
+    }
+
+    .core-value {
+      color: #f4fff2;
+      font-family: "MonaS12", "MonaS12TextKR", monospace;
+      font-size: 28px;
+      font-weight: 700;
+      text-shadow: 0 0 12px rgba(116, 240, 106, 0.34);
+    }
+
+    .core-bar {
+      height: 10px;
+      border: 1px solid rgba(116, 240, 106, 0.34);
+      background: rgba(0, 0, 0, 0.46);
+      overflow: hidden;
+    }
+
+    .core-fill {
+      width: 0%;
+      height: 100%;
+      background: #74f06a;
+      box-shadow: 0 0 14px rgba(116, 240, 106, 0.46);
+      transition: width 160ms ease;
+    }
+
+    #researcher-monitor {
+      padding: 14px;
+      min-height: 0;
+      overflow: visible;
+    }
+
+    .monitor-kicker {
+      color: #84f27a;
+      font-family: "MonaS12", "MonaS12TextKR", "Mona12ColorEmoji", monospace;
+      font-size: 12px;
+      margin-bottom: 5px;
+      text-shadow: 0 0 10px rgba(132, 242, 122, 0.3);
+    }
+
+    .monitor-title {
+      font-size: 17px;
+      font-weight: 700;
+      line-height: 1.25;
+      margin-bottom: 10px;
+    }
+
+    .monitor-divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(116, 240, 106, 0.55), transparent);
+      margin: 10px 0;
+    }
+
+    .state-pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 30px;
+      padding: 0 12px;
+      border: 1px solid rgba(116, 240, 106, 0.64);
+      color: #74f06a;
+      background: rgba(0, 0, 0, 0.3);
+      font-weight: 700;
+      box-shadow: 0 0 14px rgba(116, 240, 106, 0.18);
+      margin-bottom: 10px;
+    }
+
+    .heartbeat {
+      width: 100%;
+      height: 36px;
+      margin-bottom: 6px;
+    }
+
+    .heartbeat polyline {
+      fill: none;
+      stroke: #74f06a;
+      stroke-width: 2;
+      filter: drop-shadow(0 0 5px rgba(116, 240, 106, 0.35));
+    }
+
+    .monitor-row {
+      margin: 8px 0;
+    }
+
+    .monitor-label {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      color: #bfd5bf;
+      font-size: 12px;
+      margin-bottom: 6px;
+    }
+
+    .monitor-value {
+      color: #f1fff0;
+      font-family: "MonaS12", "MonaS12TextKR", monospace;
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .monitor-bar {
+      height: 8px;
+      border: 1px solid rgba(116, 240, 106, 0.28);
+      background: rgba(0, 0, 0, 0.42);
+      overflow: hidden;
+    }
+
+    .monitor-fill {
+      width: 0%;
+      height: 100%;
+      background: #74f06a;
+      box-shadow: 0 0 12px rgba(116, 240, 106, 0.4);
+      transition: width 160ms ease;
+    }
+
+    .monitor-note {
+      color: #9fbd9f;
+      font-size: 11px;
+      line-height: 1.32;
+      margin-top: 10px;
+    }
+
+    @media (max-width: 1040px) {
+      #app-shell {
+        grid-template-columns: 1fr;
+      }
+
+      #researcher-monitor {
+        min-height: 0;
+      }
+
+      #left-hud {
+        height: auto !important;
+      }
+    }
+
+    #game-holder {
+      width: 100%;
+    }
+
+    canvas {
+      display: block;
+      width: 100% !important;
+      height: auto !important;
+      border: 0;
+      box-shadow: none;
+      background: #090c0e;
+    }
+
+    #vaccine-panel {
+      position: relative;
+      display: flex;
+      gap: 10px;
+      margin-top: 0;
+      align-items: center;
+      padding: 12px 12px 12px;
+      border: 0;
+      border-top: 1px solid rgba(116, 240, 106, 0.12);
+      background:
+        linear-gradient(180deg, rgba(0, 2, 2, 0.82), rgba(0, 1, 1, 0.96));
+      box-shadow:
+        inset 0 1px 0 rgba(220, 230, 220, 0.035);
+    }
+
+    #vaccine-panel::before,
+    #vaccine-panel::after {
+      display: none;
+    }
+
+    #vaccine-panel::before {
+      left: 7px;
+    }
+
+    #vaccine-panel::after {
+      right: 7px;
+    }
+
+    #target-code-panel {
+      position: relative;
+      margin-top: 0;
+      padding: 12px 18px 13px;
+      border: 0;
+      border-top: 1px solid rgba(255, 255, 255, 0.055);
+      border-bottom: 1px solid rgba(116, 240, 106, 0.12);
+      background:
+        radial-gradient(ellipse at center, rgba(7, 16, 10, 0.76), rgba(0, 0, 0, 0.82) 58%, rgba(0, 0, 0, 0.94));
+      color: #f0fff0;
+      text-align: center;
+      box-shadow: inset 0 1px 0 rgba(116, 240, 106, 0.045);
+    }
+
+    #target-code-panel::before {
+      content: "";
+      position: absolute;
+      left: 18px;
+      right: 18px;
+      top: 7px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(116, 240, 106, 0.24), transparent);
+    }
+
+    #target-code-panel::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: -1px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(116, 240, 106, 0.18), transparent);
+    }
+
+    #target-code-label {
+      display: block;
+      font-family: "MonaS12", "MonaS12TextKR", "Mona12ColorEmoji", monospace;
+      color: #6eea62;
+      font-size: 13px;
+      letter-spacing: 0;
+      margin-bottom: 5px;
+      text-shadow: 0 0 8px rgba(116, 240, 106, 0.35);
+    }
+
+    #target-code-word {
+      display: block;
+      font-family: "MonaS12", "MonaS12TextKR", "Mona12ColorEmoji", monospace;
+      font-size: 31px;
+      font-weight: 800;
+      letter-spacing: 0;
+      line-height: 1.1;
+      color: #eaffdf;
+      text-shadow:
+        0 0 10px rgba(116, 240, 106, 0.28),
+        0 2px 0 #071507;
+    }
+
+    #code-input {
+      flex: 1;
+      min-width: 0;
+      height: 54px;
+      border: 1px solid rgba(116, 255, 100, 0.58);
+      background:
+        linear-gradient(rgba(116, 240, 106, 0.026) 1px, transparent 1px),
+        rgba(0, 2, 2, 0.94);
+      background-size: 100% 5px, 100% 100%;
+      color: #9dff80;
+      font-family: "MonaS12", "MonaS12TextKR", "Mona12ColorEmoji", monospace;
+      font-size: 23px;
+      padding: 0 18px;
+      outline: none;
+      letter-spacing: 0;
+      box-shadow:
+        inset 0 2px 0 rgba(0, 0, 0, 0.55),
+        inset 0 0 20px rgba(116, 255, 100, 0.12),
+        0 0 0 1px rgba(0, 0, 0, 0.62),
+        0 0 12px rgba(116, 255, 100, 0.09),
+        0 8px 18px rgba(0, 0, 0, 0.44);
+    }
+
+    #code-input::placeholder {
+      color: rgba(157, 255, 128, 0.58);
+    }
+
+    #code-input:focus {
+      border-color: #a5ff83;
+      box-shadow:
+        inset 0 2px 0 rgba(0, 0, 0, 0.55),
+        inset 0 0 22px rgba(116, 255, 100, 0.22),
+        0 0 16px rgba(116, 255, 100, 0.2);
+    }
+
+    #submit-code,
+    #restart-button,
+    #download-log-button,
+    #download-summary-button {
+      height: 54px;
+      border: 1px solid #b2453d;
+      background:
+        linear-gradient(180deg, rgba(142, 46, 38, 0.98), rgba(52, 12, 10, 0.98));
+      color: #ffd5cc;
+      font-family: "MonaS12TextKR", "MonaS12", "Mona12ColorEmoji", monospace;
+      font-weight: 700;
+      padding: 0 26px;
+      cursor: pointer;
+      text-shadow: 0 0 8px rgba(255, 92, 72, 0.28);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 213, 204, 0.16),
+        inset 0 -3px 0 rgba(0, 0, 0, 0.38),
+        0 8px 18px rgba(0, 0, 0, 0.42),
+        0 0 14px rgba(190, 45, 32, 0.12);
+    }
+
+    #submit-code:hover,
+    #restart-button:hover,
+    #download-log-button:hover,
+    #download-summary-button:hover {
+      background:
+        linear-gradient(180deg, rgba(149, 48, 39, 0.98), rgba(61, 16, 13, 0.98));
+      color: #fff6f2;
+    }
+
+    #ending-actions {
+      display: none;
+      width: 100%;
+      height: 54px;
+      gap: 8px;
+    }
+
+    #ending-actions button {
+      display: block;
+      flex: 1 1 0;
+      width: auto;
+      min-width: 0;
+      margin: 0;
+      padding: 0 12px;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    #download-log-button,
+    #download-summary-button {
+      border-color: rgba(116, 240, 106, 0.42);
+      background: linear-gradient(180deg, rgba(28, 64, 34, 0.98), rgba(7, 20, 10, 0.98));
+      color: #caffc5;
+      text-shadow: 0 0 8px rgba(116, 240, 106, 0.24);
+    }
+
+    #download-log-button:hover,
+    #download-summary-button:hover {
+      background: linear-gradient(180deg, rgba(42, 91, 49, 0.98), rgba(10, 29, 14, 0.98));
+      color: #efffed;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div id="app-shell">
+      <div id="left-hud">
+        <section id="game-logo-panel" aria-label="게임 로고">
+          <img id="game-logo" src="dont-let-them-in-logo.png" alt="DON'T LET THEM IN" />
+        </section>
+        <section id="core-status-panel" aria-label="게임 진행 상태">
+          <div class="core-row">
+            <div class="core-label"><span class="core-label-name"><span class="core-emoji">⏰</span> 남은 시간</span><span id="monitor-time-value" class="core-value">90초</span></div>
+            <div class="core-bar"><div id="monitor-time-fill" class="core-fill"></div></div>
+          </div>
+          <div class="core-row">
+            <div class="core-label"><span class="core-label-name"><span class="core-emoji">🧪</span> 백신 진행도</span><span id="monitor-vaccine-value" class="core-value">0%</span></div>
+            <div class="core-bar"><div id="monitor-vaccine-fill" class="core-fill"></div></div>
+          </div>
+        </section>
+        <aside id="researcher-monitor" aria-label="연구원 상태 모니터">
+          <div class="monitor-kicker">ADAPTATION SIGNAL</div>
+          <div class="monitor-title">연구원 상태 모니터</div>
+          <div id="monitor-state" class="state-pill">상태: 보통</div>
+          <svg class="heartbeat" viewBox="0 0 220 52" preserveAspectRatio="none" aria-hidden="true">
+            <polyline id="monitor-heartline" points="0,28 26,28 34,18 42,36 51,28 80,28 88,14 98,40 108,28 140,28 150,22 158,32 168,28 220,28" />
+          </svg>
+          <div class="monitor-divider"></div>
+          <div class="monitor-row">
+            <div class="monitor-label"><span>긴장 반응</span><span id="monitor-tension-value" class="monitor-value">0%</span></div>
+            <div class="monitor-bar"><div id="monitor-tension-fill" class="monitor-fill"></div></div>
+          </div>
+          <div class="monitor-row">
+            <div class="monitor-label"><span>최근 10초 오타</span><span id="monitor-typo-value" class="monitor-value">0</span></div>
+            <div class="monitor-bar"><div id="monitor-typo-fill" class="monitor-fill"></div></div>
+          </div>
+          <div class="monitor-row">
+            <div class="monitor-label"><span>평균 문 내구도</span><span id="monitor-durability-value" class="monitor-value">100%</span></div>
+            <div class="monitor-bar"><div id="monitor-durability-fill" class="monitor-fill"></div></div>
+          </div>
+          <div class="monitor-divider"></div>
+          <div id="monitor-effect" class="monitor-note">현재 상태를 분석 중입니다.</div>
+        </aside>
+      </div>
+      <div id="game-column">
+        <div id="game-holder"></div>
+        <div id="target-code-panel">
+          <span id="target-code-label">VACCINE CODE</span>
+          <span id="target-code-word">----</span>
+        </div>
+        <div id="vaccine-panel">
+          <input id="code-input" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="백신 코드를 입력하세요" />
+          <button id="submit-code" type="button">입력</button>
+          <div id="ending-actions">
+            <button id="restart-button" type="button">다시 시작</button>
+            <button id="download-summary-button" type="button">요약 CSV 저장</button>
+            <button id="download-log-button" type="button">상세 CSV 저장</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const CODE_WORDS_BY_DIFFICULTY = {
+      early: [
+        'VIRUS', 'CURE', 'CELL', 'BLOOD', 'SERUM',
+        'FEVER', 'MASK', 'TEST', 'GENE', 'DOSE'
+      ],
+      mid: [
+        'VACCINE', 'ANTIBODY', 'RESEARCH', 'PROTOCOL', 'IMMUNE',
+        'PATIENT', 'SAMPLE', 'CULTURE', 'THERAPY', 'INFECTION'
+      ],
+      late: [
+        'VACCINATION', 'QUARANTINE', 'CONTAGION', 'CONTAMINATE', 'ANTIVIRAL',
+        'DIAGNOSIS', 'LABORATORY', 'STERILIZE', 'TRANSMISSION', 'BIOHAZARD'
+      ]
+    };
+    const DOOR_NAMES = ['북문', '동문', '서문', '남문'];
+    const DOOR_RECOVERY = 15;
+    const VACCINE_GAIN = 4;
+    const PLAY_TIME_SECONDS = 90;
+    const DANGER_DURABILITY = 30;
+
+    let doors;
+    let currentCode;
+    let currentWordDifficulty;
+    let vaccineProgress;
+    let elapsedSeconds;
+    let lastTickMs;
+    let gameState;
+    let message;
+    let sessionId;
+    let eventLog;
+    let totalRepairs;
+    let repairCounts;
+    let clickTimes;
+    let clickIntervals;
+    let typoCount;
+    let backspaceCount;
+    let correctCount;
+    let dangerSeconds;
+    let lastSnapshotSecond;
+    let typoTimes;
+    let adaptationState;
+    let adaptationTimes;
+    let lastAdaptationSecond;
+    let adaptationChangeCount;
+    let overloadCount;
+    let maxRecent10sRepairCount;
+    let maxDangerDoorCount;
+    let audioContext;
+    let audioUnlocked = false;
+    let bgm;
+    let doorBangBuffer;
+    let heavyDoorBangBuffer;
+    let audioBuffersLoading;
+    let lastKnockAudioTime;
+    let laboratoryBackground;
+    let failureEndingImage;
+    let successEndingImage;
+    let zombieScreech;
+    let victoryChime;
+    let endingStartedAt;
+
+    const input = document.getElementById('code-input');
+    const submitButton = document.getElementById('submit-code');
+    const restartButton = document.getElementById('restart-button');
+    const downloadLogButton = document.getElementById('download-log-button');
+    const downloadSummaryButton = document.getElementById('download-summary-button');
+    const endingActions = document.getElementById('ending-actions');
+    const targetCodePanel = document.getElementById('target-code-panel');
+    const targetCodeWord = document.getElementById('target-code-word');
+    const monitorTimeValue = document.getElementById('monitor-time-value');
+    const monitorTimeFill = document.getElementById('monitor-time-fill');
+    const monitorVaccineValue = document.getElementById('monitor-vaccine-value');
+    const monitorVaccineFill = document.getElementById('monitor-vaccine-fill');
+    const monitorState = document.getElementById('monitor-state');
+    const monitorTensionValue = document.getElementById('monitor-tension-value');
+    const monitorTensionFill = document.getElementById('monitor-tension-fill');
+    const monitorTypoValue = document.getElementById('monitor-typo-value');
+    const monitorTypoFill = document.getElementById('monitor-typo-fill');
+    const monitorDurabilityValue = document.getElementById('monitor-durability-value');
+    const monitorDurabilityFill = document.getElementById('monitor-durability-fill');
+    const monitorEffect = document.getElementById('monitor-effect');
+    const monitorHeartline = document.getElementById('monitor-heartline');
+    const leftHud = document.getElementById('left-hud');
+    const gameLogo = document.getElementById('game-logo');
+
+    function preload() {
+      laboratoryBackground = loadImage('laboratory-background-game.jpeg');
+      failureEndingImage = loadImage('ending-fail.png');
+      successEndingImage = loadImage('ending-success.png');
+    }
+
+    function syncLeftHudHeight() {
+      if (!leftHud) return;
+      const canvasElement = document.querySelector('#game-holder canvas');
+      if (!canvasElement || window.innerWidth <= 1040) {
+        leftHud.style.height = 'auto';
+        leftHud.style.minHeight = '0px';
+        return;
+      }
+
+      const gameColumn = document.getElementById('game-column');
+      if (!gameColumn) return;
+
+      const frameHeight = gameColumn.getBoundingClientRect().height;
+      if (frameHeight > 0) {
+        leftHud.style.height = `${frameHeight}px`;
+        leftHud.style.minHeight = `${frameHeight}px`;
+      }
+    }
+
+    function setup() {
+      const canvas = createCanvas(960, 540);
+      canvas.parent('game-holder');
+      textFont('"MonaS12TextKR", "Mona12ColorEmoji", "MonaS12", monospace');
+      syncLeftHudHeight();
+      if ('ResizeObserver' in window) {
+        const canvasElement = document.querySelector('#game-holder canvas');
+        new ResizeObserver(syncLeftHudHeight).observe(canvasElement);
+      }
+      window.addEventListener('resize', syncLeftHudHeight);
+      gameLogo.addEventListener('load', syncLeftHudHeight);
+      bgm = new Audio('empty-labyrinth-bgm.mp3');
+      bgm.loop = true;
+      bgm.preload = 'auto';
+      bgm.volume = 0.55;
+      zombieScreech = new Audio('zombie-screech.mp3');
+      zombieScreech.preload = 'auto';
+      zombieScreech.volume = 0.9;
+      victoryChime = new Audio('victory-chime.mp3');
+      victoryChime.preload = 'auto';
+      victoryChime.volume = 0.82;
+      resetGame();
+      document.addEventListener('pointerdown', unlockAudio);
+      document.addEventListener('keydown', unlockAudio);
+      submitButton.addEventListener('click', submitCode);
+      input.addEventListener('input', () => {
+        const cursorStart = input.selectionStart;
+        const cursorEnd = input.selectionEnd;
+        const uppercaseValue = input.value.toUpperCase();
+        if (input.value !== uppercaseValue) {
+          input.value = uppercaseValue;
+          input.setSelectionRange(cursorStart, cursorEnd);
+        }
+      });
+      input.addEventListener('keydown', (event) => {
+        unlockAudio();
+        if (event.key === 'Backspace' && gameState === 'playing') {
+          backspaceCount += 1;
+        }
+        if (event.key === 'Enter') {
+          submitCode();
+        }
+      });
+      restartButton.addEventListener('click', resetGame);
+      downloadLogButton.addEventListener('click', downloadGameLog);
+      downloadSummaryButton.addEventListener('click', downloadGameSummary);
+    }
+
+    function resetGame() {
+      doors = DOOR_NAMES.map((name, index) => ({
+        name,
+        durability: 100,
+        rect: null,
+        repairRect: null,
+        index,
+        nextKnockTime: random(1, 3),
+        knockEndTime: 0,
+        knockStrength: 0
+      }));
+      vaccineProgress = 0;
+      elapsedSeconds = 0;
+      lastTickMs = millis();
+      gameState = 'playing';
+      if (bgm) {
+        bgm.volume = 0.55;
+      }
+      sessionId = new Date().toISOString();
+      eventLog = [];
+      totalRepairs = 0;
+      repairCounts = Object.fromEntries(DOOR_NAMES.map((name) => [name, 0]));
+      clickTimes = [];
+      clickIntervals = [];
+      typoCount = 0;
+      backspaceCount = 0;
+      correctCount = 0;
+      dangerSeconds = Object.fromEntries(DOOR_NAMES.map((name) => [name, 0]));
+      lastSnapshotSecond = -1;
+      typoTimes = [];
+      lastKnockAudioTime = -999;
+      adaptationState = 'normal';
+      adaptationTimes = { stable: 0, normal: 0, overload: 0 };
+      lastAdaptationSecond = -1;
+      adaptationChangeCount = 0;
+      overloadCount = 0;
+      maxRecent10sRepairCount = 0;
+      maxDangerDoorCount = 0;
+      endingStartedAt = 0;
+      if (zombieScreech) {
+        zombieScreech.pause();
+        zombieScreech.currentTime = 0;
+      }
+      if (victoryChime) {
+        victoryChime.pause();
+        victoryChime.currentTime = 0;
+      }
+      message = '문을 클릭해서 수리하고 백신 코드를 입력하세요.';
+      currentCode = pickCode();
+      updateTargetCodePanel();
+      input.value = '';
+      input.disabled = false;
+      input.style.display = 'block';
+      submitButton.disabled = false;
+      submitButton.style.display = 'block';
+      targetCodePanel.style.display = 'block';
+      endingActions.style.display = 'none';
+      updateResearcherMonitor();
+      input.focus();
+      recordEvent('game_start');
+    }
+
+    function draw() {
+      const shake = horrorShakeAmount();
+      background(24, 27, 34);
+      push();
+      if (shake > 0) {
+        translate(random(-shake, shake), random(-shake, shake));
+      }
+      image(laboratoryBackground, 0, 0, width, height);
+      updateGame();
+      drawDoors();
+      drawProgressBars();
+      drawFooter();
+      drawHorrorOverlay();
+      updateResearcherMonitor();
+      pop();
+      drawEndOverlay();
+    }
+
+    function updateGame() {
+      const now = millis();
+      const deltaSeconds = min((now - lastTickMs) / 1000, 0.1);
+      lastTickMs = now;
+
+      if (gameState !== 'playing') {
+        return;
+      }
+
+      elapsedSeconds += deltaSeconds;
+      updateAdaptationState();
+      adaptationTimes[adaptationState] += deltaSeconds;
+      const decay = doorDecayRate(elapsedSeconds) * deltaSeconds;
+
+      for (const door of doors) {
+        door.durability = max(0, door.durability - decay);
+        updateDoorKnock(door);
+        if (door.durability <= DANGER_DURABILITY) {
+          dangerSeconds[door.name] += deltaSeconds;
+        }
+        if (door.durability <= 0) {
+          endGame('gameover', `${door.name}이 뚫렸습니다`);
+          return;
+        }
+      }
+
+      const snapshotSecond = floor(elapsedSeconds);
+      if (snapshotSecond !== lastSnapshotSecond) {
+        lastSnapshotSecond = snapshotSecond;
+        recordEvent('second_snapshot');
+      }
+
+      if (vaccineProgress >= 100) {
+        endGame('victory', '백신 개발 완료');
+      } else if (elapsedSeconds >= PLAY_TIME_SECONDS) {
+        endGame('gameover', '제한 시간이 끝났습니다');
+      }
+    }
+
+    function updateDoorKnock(door) {
+      if (elapsedSeconds < door.nextKnockTime) return;
+
+      const profile = knockProfile(door.durability);
+      door.knockStrength = profile.strength;
+      door.knockEndTime = elapsedSeconds + profile.duration;
+      door.nextKnockTime = elapsedSeconds + random(profile.minInterval, profile.maxInterval);
+      playKnockSound(door.index, profile.strength);
+    }
+
+    function knockProfile(durability) {
+      const fearBoost = adaptationState === 'overload' ? 1.35 : adaptationState === 'stable' ? 0.85 : 1;
+      const intervalBoost = adaptationState === 'overload' ? 0.72 : adaptationState === 'stable' ? 1.15 : 1;
+      let profile;
+      if (durability <= 15) {
+        profile = { minInterval: 0.5, maxInterval: 1, strength: 6, duration: 0.28 };
+      } else if (durability <= DANGER_DURABILITY) {
+        profile = { minInterval: 1, maxInterval: 2, strength: 4, duration: 0.22 };
+      } else if (durability <= 60) {
+        profile = { minInterval: 2, maxInterval: 3, strength: 2.5, duration: 0.18 };
+      } else {
+        profile = { minInterval: 3, maxInterval: 5, strength: 1.3, duration: 0.14 };
+      }
+
+      return {
+        minInterval: profile.minInterval * intervalBoost,
+        maxInterval: profile.maxInterval * intervalBoost,
+        strength: profile.strength * fearBoost,
+        duration: profile.duration * fearBoost
+      };
+    }
+
+    async function unlockAudio() {
+      startBgm();
+      if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioContext.state === 'suspended') {
+        await audioContext.resume();
+      }
+      const shouldPlayTestKnock = !audioUnlocked && audioContext.state === 'running';
+      if (audioContext.state === 'running') {
+        audioUnlocked = true;
+      }
+      ensureAudioBuffers().then(() => {
+        if (shouldPlayTestKnock) {
+          playDoorBangSample(0, 2, 0);
+        }
+      });
+    }
+
+    async function ensureAudioBuffers() {
+      if (doorBangBuffer && heavyDoorBangBuffer) return;
+      if (!audioBuffersLoading) {
+        audioBuffersLoading = Promise.all([
+          loadAudioBuffer('metal-door-knock.mp3'),
+          loadAudioBuffer('door-bang-echo.mp3')
+        ]).then(([doorBuffer, heavyBuffer]) => {
+          doorBangBuffer = doorBuffer;
+          heavyDoorBangBuffer = heavyBuffer;
+        }).catch(() => {
+          audioBuffersLoading = null;
+        });
+      }
+      await audioBuffersLoading;
+    }
+
+    async function loadAudioBuffer(url) {
+      const response = await fetch(url);
+      const arrayBuffer = await response.arrayBuffer();
+      const decodedBuffer = await audioContext.decodeAudioData(arrayBuffer);
+      return makeMonoBuffer(decodedBuffer);
+    }
+
+    function makeMonoBuffer(sourceBuffer) {
+      const monoBuffer = audioContext.createBuffer(1, sourceBuffer.length, sourceBuffer.sampleRate);
+      const monoData = monoBuffer.getChannelData(0);
+
+      for (let channel = 0; channel < sourceBuffer.numberOfChannels; channel += 1) {
+        const channelData = sourceBuffer.getChannelData(channel);
+        for (let i = 0; i < channelData.length; i += 1) {
+          monoData[i] += channelData[i] / sourceBuffer.numberOfChannels;
+        }
+      }
+
+      return monoBuffer;
+    }
+
+    function startBgm() {
+      if (!bgm || !bgm.paused) return;
+      bgm.play().catch(() => {
+        // 브라우저가 아직 사용자 입력으로 인정하지 않으면 다음 클릭에서 다시 시도한다.
+      });
+    }
+
+    function playKnockSound(doorIndex, strength) {
+      if (elapsedSeconds - lastKnockAudioTime < knockAudioCooldown()) return;
+      lastKnockAudioTime = elapsedSeconds;
+
+      if (adaptationState !== 'overload') {
+        playDoorBangSample(doorIndex, strength, 0);
+        return;
+      }
+
+      const hitCount = elapsedSeconds >= 60
+        ? floor(random(1, 3))
+        : 1;
+      let hitDelay = 0;
+      for (let hit = 0; hit < hitCount; hit += 1) {
+        playHeavyDoorBangSample(doorIndex, strength, hitDelay);
+        hitDelay += random(0.36, 0.58);
+      }
+    }
+
+    function knockAudioCooldown() {
+      let cooldown;
+      if (elapsedSeconds < 30) {
+        cooldown = 1.05;
+      } else if (elapsedSeconds < 60) {
+        cooldown = 1.05;
+      } else {
+        cooldown = 0.72;
+      }
+
+      if (adaptationState === 'overload') {
+        cooldown -= 0.14;
+      }
+      return max(0.55, cooldown);
+    }
+
+    function playDoorBangSample(doorIndex, strength, delay) {
+      if (!doorBangBuffer || !audioUnlocked || !audioContext) return;
+
+      const doorVolume = doorIndex === 1 || doorIndex === 2 ? 0.92 : 0.82;
+      const volume = constrain((0.18 + strength * 0.075) * doorVolume, 0.16, 0.82);
+      playCenteredBuffer(doorBangBuffer, volume, delay);
+    }
+
+    function playHeavyDoorBangSample(doorIndex, strength, delay) {
+      if (!heavyDoorBangBuffer || !audioUnlocked || !audioContext) return;
+
+      const doorVolume = doorIndex === 1 || doorIndex === 2 ? 1 : 0.92;
+      const volume = constrain((0.78 + strength * 0.055) * doorVolume, 0.82, 1);
+      setTimeout(() => {
+        duckBgmForImpact();
+      }, delay * 1000);
+      playCenteredBuffer(heavyDoorBangBuffer, volume, delay);
+    }
+
+    function playCenteredBuffer(buffer, volume, delay) {
+      const source = audioContext.createBufferSource();
+      const gain = audioContext.createGain();
+
+      source.buffer = buffer;
+      gain.gain.value = volume;
+
+      source.connect(gain);
+      gain.connect(audioContext.destination);
+      source.start(audioContext.currentTime + delay);
+    }
+
+    function duckBgmForImpact() {
+      if (!bgm || bgm.paused) return;
+      bgm.volume = 0.28;
+      setTimeout(() => {
+        if (bgm && gameState === 'playing') {
+          bgm.volume = 0.55;
+        }
+      }, 650);
+    }
+
+    function playCodeErrorSound() {
+      if (!audioUnlocked || !audioContext) return;
+
+      const now = audioContext.currentTime;
+      const masterGain = audioContext.createGain();
+      const compressor = audioContext.createDynamicsCompressor();
+      const tones = [
+        { offset: 0, frequency: 540, duration: 0.085, volume: 0.3 },
+        { offset: 0.12, frequency: 360, duration: 0.12, volume: 0.36 }
+      ];
+
+      masterGain.gain.value = 1.15;
+      compressor.threshold.value = -16;
+      compressor.knee.value = 4;
+      compressor.ratio.value = 4;
+      compressor.attack.value = 0.001;
+      compressor.release.value = 0.12;
+      masterGain.connect(compressor);
+      compressor.connect(audioContext.destination);
+
+      for (const tone of tones) {
+        const start = now + tone.offset;
+        const oscillator = audioContext.createOscillator();
+        const filter = audioContext.createBiquadFilter();
+        const gain = audioContext.createGain();
+
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(tone.frequency, start);
+        filter.type = 'lowpass';
+        filter.frequency.value = 950;
+        filter.Q.value = 0.55;
+
+        gain.gain.setValueAtTime(0.0001, start);
+        gain.gain.exponentialRampToValueAtTime(tone.volume, start + 0.008);
+        gain.gain.setValueAtTime(tone.volume, start + tone.duration * 0.55);
+        gain.gain.exponentialRampToValueAtTime(0.0001, start + tone.duration);
+
+        oscillator.connect(filter);
+        filter.connect(gain);
+        gain.connect(masterGain);
+        oscillator.start(start);
+        oscillator.stop(start + tone.duration + 0.02);
+      }
+    }
+
+    function playSingleKnock(doorIndex, strength, delay) {
+      const now = audioContext.currentTime + delay;
+      const oscillator = audioContext.createOscillator();
+      const oscillatorGain = audioContext.createGain();
+      const bodyOscillator = audioContext.createOscillator();
+      const bodyGain = audioContext.createGain();
+      const noiseSource = audioContext.createBufferSource();
+      const noiseFilter = audioContext.createBiquadFilter();
+      const noiseGain = audioContext.createGain();
+      const impactFilter = audioContext.createBiquadFilter();
+      const impactGain = audioContext.createGain();
+      const masterGain = audioContext.createGain();
+      const compressor = audioContext.createDynamicsCompressor();
+      const noiseBuffer = audioContext.createBuffer(1, audioContext.sampleRate * 0.12, audioContext.sampleRate);
+      const noiseData = noiseBuffer.getChannelData(0);
+
+      for (let i = 0; i < noiseData.length; i += 1) {
+        noiseData[i] = random(-1, 1) * (1 - i / noiseData.length);
+      }
+
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(random(105, 135), now);
+      oscillator.frequency.exponentialRampToValueAtTime(random(70, 85), now + 0.07);
+      oscillatorGain.gain.setValueAtTime(0.0001, now);
+      oscillatorGain.gain.exponentialRampToValueAtTime((0.055 + strength * 0.008) * random(0.8, 1.1), now + 0.003);
+      oscillatorGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.075);
+
+      bodyOscillator.type = 'triangle';
+      bodyOscillator.frequency.setValueAtTime(random(230, 310), now);
+      bodyOscillator.frequency.exponentialRampToValueAtTime(random(125, 165), now + 0.11);
+      bodyGain.gain.setValueAtTime(0.0001, now);
+      bodyGain.gain.exponentialRampToValueAtTime((0.18 + strength * 0.014) * random(0.85, 1.1), now + 0.004);
+      bodyGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
+
+      noiseSource.buffer = noiseBuffer;
+      noiseFilter.type = 'bandpass';
+      noiseFilter.frequency.value = random(420, 720);
+      noiseFilter.Q.value = random(1.4, 2.4);
+      noiseGain.gain.setValueAtTime((0.55 + strength * 0.04) * random(0.85, 1.15), now);
+      noiseGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.095);
+
+      impactFilter.type = 'bandpass';
+      impactFilter.frequency.value = random(1200, 1900);
+      impactFilter.Q.value = random(0.8, 1.5);
+      impactGain.gain.setValueAtTime((0.12 + strength * 0.012) * random(0.75, 1.05), now);
+      impactGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.028);
+
+      masterGain.gain.value = 2.1;
+      compressor.threshold.value = -18;
+      compressor.knee.value = 10;
+      compressor.ratio.value = 8;
+      compressor.attack.value = 0.002;
+      compressor.release.value = 0.18;
+
+      oscillator.connect(oscillatorGain);
+      oscillatorGain.connect(masterGain);
+      bodyOscillator.connect(bodyGain);
+      bodyGain.connect(masterGain);
+      noiseSource.connect(noiseFilter);
+      noiseFilter.connect(noiseGain);
+      noiseGain.connect(masterGain);
+      noiseSource.connect(impactFilter);
+      impactFilter.connect(impactGain);
+      impactGain.connect(masterGain);
+      masterGain.connect(compressor);
+      compressor.connect(audioContext.destination);
+      oscillator.start(now);
+      bodyOscillator.start(now);
+      noiseSource.start(now);
+      oscillator.stop(now + 0.08);
+      bodyOscillator.stop(now + 0.13);
+      noiseSource.stop(now + 0.11);
+    }
+
+    function updateAdaptationState() {
+      const currentSecond = floor(elapsedSeconds);
+      if (currentSecond === lastAdaptationSecond) return;
+      lastAdaptationSecond = currentSecond;
+
+      const previousState = adaptationState;
+      const recentTypos = recent10sTypoCount();
+      const recentRepairs = recent10sRepairCount();
+      const averageDurability = avgDoorDurability();
+      const dangerDoors = dangerDoorCount();
+
+      maxRecent10sRepairCount = max(maxRecent10sRepairCount, recentRepairs);
+      maxDangerDoorCount = max(maxDangerDoorCount, dangerDoors);
+
+      if (recentTypos >= 3 || recentRepairs >= 8 || averageDurability <= 45 || dangerDoors >= 2) {
+        adaptationState = 'overload';
+      } else if (recentTypos <= 1 && recentRepairs <= 4 && averageDurability >= 65 && dangerDoors === 0) {
+        adaptationState = 'stable';
+      } else {
+        adaptationState = 'normal';
+      }
+      if (adaptationState !== previousState) {
+        adaptationChangeCount += 1;
+        if (adaptationState === 'overload') {
+          overloadCount += 1;
+        }
+        recordEvent('adaptation_change');
+      }
+    }
+
+    function recent10sTypoCount() {
+      const cutoff = elapsedSeconds - 10;
+      return typoTimes.filter((time) => time >= cutoff).length;
+    }
+
+    function recent10sRepairCount() {
+      const cutoff = elapsedSeconds - 10;
+      return clickTimes.filter((time) => time >= cutoff).length;
+    }
+
+    function dangerDoorCount() {
+      return doors.filter((door) => door.durability <= DANGER_DURABILITY).length;
+    }
+
+    function avgDoorDurability() {
+      return doors.reduce((sum, door) => sum + door.durability, 0) / doors.length;
+    }
+
+    function adaptationDisplay() {
+      if (adaptationState === 'stable') {
+        return {
+          label: '안정',
+          effect: '행동이 안정적입니다. 공포 반응이 낮게 유지됩니다.'
+        };
+      }
+      if (adaptationState === 'overload') {
+        return {
+          label: '과부하',
+          effect: '오타, 수리 행동 또는 문 위험도가 증가했습니다. 공포 연출이 강해집니다.'
+        };
+      }
+      return {
+        label: '보통',
+        effect: '현재 입력과 수리 행동을 계속 관찰 중입니다.'
+      };
+    }
+
+    function updateResearcherMonitor() {
+      if (!monitorState || !doors) return;
+
+      const display = adaptationDisplay();
+      const recentTypos = recent10sTypoCount();
+      const averageDurability = avgDoorDurability();
+      const tension = round(horrorIntensity() * 100);
+      const remainingSeconds = max(0, ceil(PLAY_TIME_SECONDS - elapsedSeconds));
+      const remainingPercent = constrain((remainingSeconds / PLAY_TIME_SECONDS) * 100, 0, 100);
+      const typoPressure = constrain(recentTypos / 3, 0, 1) * 100;
+      const heartbeatLift = adaptationState === 'overload' ? 8 : adaptationState === 'normal' ? 4 : 0;
+      const heartlinePoints = `0,28 26,28 34,${18 - heartbeatLift} 42,${36 + heartbeatLift} 51,28 80,28 88,${14 - heartbeatLift} 98,${40 + heartbeatLift} 108,28 140,28 150,${22 - heartbeatLift / 2} 158,${32 + heartbeatLift / 2} 168,28 220,28`;
+
+      monitorTimeValue.textContent = `${remainingSeconds}초`;
+      monitorTimeFill.style.width = `${remainingPercent}%`;
+      monitorVaccineValue.textContent = `${floor(vaccineProgress)}%`;
+      monitorVaccineFill.style.width = `${constrain(vaccineProgress, 0, 100)}%`;
+      monitorState.textContent = `상태: ${display.label}`;
+      monitorTensionValue.textContent = `${tension}%`;
+      monitorTensionFill.style.width = `${tension}%`;
+      monitorTypoValue.textContent = `${recentTypos}`;
+      monitorTypoFill.style.width = `${typoPressure}%`;
+      monitorDurabilityValue.textContent = `${round(averageDurability)}%`;
+      monitorDurabilityFill.style.width = `${constrain(averageDurability, 0, 100)}%`;
+      monitorEffect.textContent = display.effect;
+      monitorHeartline.setAttribute('points', heartlinePoints);
+    }
+
+    function horrorIntensity() {
+      if (gameState !== 'playing' || !doors) return 0;
+
+      const lowestDurability = Math.min(...doors.map((door) => door.durability));
+      const dangerPressure = constrain((45 - lowestDurability) / 45, 0, 1);
+      const adaptationPressure = adaptationState === 'overload' ? 0.55 : adaptationState === 'normal' ? 0.2 : 0;
+      return constrain(dangerPressure * 0.65 + adaptationPressure, 0, 1);
+    }
+
+    function horrorShakeAmount() {
+      const intensity = horrorIntensity();
+      if (intensity < 0.45) return 0;
+      return (intensity - 0.45) * 5.5;
+    }
+
+    function doorDecayRate(seconds) {
+      if (seconds < 30) return 3;
+      if (seconds < 60) return 4;
+      return 5;
+    }
+
+    function drawDoors() {
+      const doorRects = doorLayout();
+      let anyRepairHovered = false;
+
+      for (let i = 0; i < doors.length; i += 1) {
+        const door = doors[i];
+        const doorBox = doorRects[i];
+        door.rect = doorBox;
+
+        const knocking = elapsedSeconds < door.knockEndTime;
+        const statusColor = door.durability <= 15
+          ? color(255, 35, 35)
+          : door.durability <= DANGER_DURABILITY
+            ? color(255, 105, 35)
+            : door.durability <= 60
+              ? color(250, 195, 55)
+              : color(65, 205, 190);
+        const repairBox = {
+          x: doorBox.uiX,
+          y: doorBox.uiY + 33,
+          w: doorBox.uiW,
+          h: 21
+        };
+        door.repairRect = repairBox;
+        const repairHovered = mouseX >= repairBox.x && mouseX <= repairBox.x + repairBox.w
+          && mouseY >= repairBox.y && mouseY <= repairBox.y + repairBox.h;
+        anyRepairHovered = anyRepairHovered || repairHovered;
+
+        push();
+        noStroke();
+        fill(4, 9, 12, 215);
+        rect(doorBox.uiX, doorBox.uiY, doorBox.uiW, 54, 4);
+        fill(statusColor);
+        rect(doorBox.uiX + 5, doorBox.uiY + 25, (doorBox.uiW - 10) * (door.durability / 100), 5);
+        fill(235);
+        textFont('MonaS12TextKR');
+        textAlign(CENTER, CENTER);
+        textSize(13);
+        text(`${door.name} ${ceil(door.durability)}%`, doorBox.uiX + doorBox.uiW / 2, doorBox.uiY + 12);
+
+        fill(repairHovered ? color(216, 82, 55) : color(58, 23, 20));
+        stroke(repairHovered || knocking ? statusColor : color(185, 72, 52));
+        strokeWeight(knocking ? 2 : 1);
+        rect(repairBox.x, repairBox.y, repairBox.w, repairBox.h, 3);
+        noStroke();
+        fill(repairHovered ? color(20, 8, 6) : color(255, 210, 190));
+        textFont('MonaS12TextKR');
+        drawCenteredEmojiLabel('🔨', '수리하기', repairBox.x + repairBox.w / 2, repairBox.y + repairBox.h / 2, 12);
+        pop();
+      }
+
+      cursor(anyRepairHovered ? HAND : ARROW);
+    }
+
+    function doorLayout() {
+      return [
+        { x: 389, y: 0, w: 182, h: 132, uiX: 410, uiY: 119, uiW: 140 },
+        { x: 852, y: 170, w: 108, h: 192, uiX: 746, uiY: 240, uiW: 140 },
+        { x: 0, y: 170, w: 108, h: 192, uiX: 74, uiY: 240, uiW: 140 },
+        { x: 385, y: 462, w: 190, h: 78, uiX: 410, uiY: 407, uiW: 140 }
+      ];
+    }
+
+    function drawProgressBars() {
+      // 진행도는 상단 상태 패널에 표시한다.
+    }
+
+    function drawBar(x, y, w, h, value, label, colorValue, labelSize = 15, emoji = '') {
+      noStroke();
+      fill(12, 14, 19);
+      rect(x, y, w, h);
+      fill(colorValue);
+      rect(x, y, w * (value / 100), h);
+
+      fill(235);
+      drawEmojiLabel(emoji, `${label}: ${floor(value)}%`, x, y - 4, labelSize, BOTTOM);
+    }
+
+    function drawEmojiLabel(emoji, label, x, y, size, verticalAlign = CENTER) {
+      push();
+      textAlign(LEFT, verticalAlign);
+      if (emoji) {
+        textFont('Mona12ColorEmoji');
+        textSize(size + 1);
+        text(emoji, x, y);
+      }
+      textFont('MonaS12TextKR');
+      textSize(size);
+      text(label, x + (emoji ? size + 8 : 0), y);
+      pop();
+    }
+
+    function drawCenteredEmojiLabel(emoji, label, x, y, size) {
+      push();
+      textFont('MonaS12TextKR');
+      textSize(size);
+      const labelWidth = textWidth(label);
+      const emojiWidth = emoji ? size + 4 : 0;
+      const gap = emoji ? 4 : 0;
+      const startX = x - (emojiWidth + gap + labelWidth) / 2;
+      textAlign(LEFT, CENTER);
+      if (emoji) {
+        textFont('Mona12ColorEmoji');
+        textSize(size + 1);
+        text(emoji, startX, y);
+      }
+      textFont('MonaS12TextKR');
+      textSize(size);
+      text(label, startX + emojiWidth + gap, y);
+      pop();
+    }
+
+    function drawFooter() {
+      push();
+      textFont('MonaS12TextKR');
+      textAlign(CENTER, CENTER);
+      textSize(14);
+      const panelW = min(500, textWidth(message) + 48);
+      const panelX = width / 2 - panelW / 2;
+      const panelY = 42;
+      noStroke();
+      fill(3, 8, 11, 190);
+      rect(panelX, panelY, panelW, 32, 4);
+      stroke(80, 190, 205, 70);
+      noFill();
+      rect(panelX, panelY, panelW, 32, 4);
+      noStroke();
+      fill(205, 236, 238);
+      text(message, width / 2, panelY + 16);
+      pop();
+    }
+
+    function drawHorrorOverlay() {
+      const intensity = horrorIntensity();
+      if (intensity <= 0.01) return;
+
+      const pulse = sin(frameCount * (0.09 + intensity * 0.08)) * 0.5 + 0.5;
+      const alpha = 12 + intensity * 42 + pulse * intensity * 22;
+
+      push();
+      noStroke();
+      for (let i = 0; i < 9; i += 1) {
+        const inset = i * 15;
+        const layerAlpha = alpha * (1 - i / 9) * 0.34;
+        stroke(155, 10, 8, layerAlpha);
+        strokeWeight(30);
+        noFill();
+        rect(inset, inset, width - inset * 2, height - inset * 2, 12);
+      }
+      noStroke();
+
+      if (intensity > 0.62 && frameCount % 34 < 8) {
+        fill(190, 20, 14, 18 + intensity * 26);
+        rect(0, 0, width, height);
+      }
+      pop();
+    }
+
+    function drawEndOverlay() {
+      if (gameState === 'playing') {
+        return;
+      }
+
+      if (gameState === 'gameover' && failureEndingImage) {
+        const endingSeconds = max(0, (millis() - endingStartedAt) / 1000);
+        const zoomPulse = 1.045 + min(endingSeconds * 0.012, 0.055) + sin(endingSeconds * 3.2) * 0.012;
+        const initialShake = 8 * exp(-endingSeconds * 0.48);
+        const persistentShake = 1.4 + sin(endingSeconds * 9.5) * 0.8;
+        const shakeAmount = initialShake + persistentShake;
+        const shakeX = random(-shakeAmount, shakeAmount);
+        const shakeY = random(-shakeAmount, shakeAmount);
+        const imageAspect = failureEndingImage.width / failureEndingImage.height;
+        const canvasAspect = width / height;
+        const coverWidth = imageAspect > canvasAspect ? height * imageAspect : width;
+        const coverHeight = imageAspect > canvasAspect ? height : width / imageAspect;
+
+        push();
+        imageMode(CENTER);
+        image(
+          failureEndingImage,
+          width / 2 + shakeX,
+          height / 2 + shakeY,
+          coverWidth * zoomPulse,
+          coverHeight * zoomPulse
+        );
+
+        const redPulse = 22 + (sin(endingSeconds * 5.4) + 1) * 13;
+        noStroke();
+        fill(135, 0, 0, redPulse);
+        rect(0, 0, width, height);
+
+        fill(0, 0, 0, 178);
+        rect(0, height - 76, width, 76);
+        fill(255, 60, 48);
+        textFont('MonaS12TextKR');
+        textAlign(CENTER, CENTER);
+        textSize(34);
+        text('연구소 함락', width / 2, height - 49);
+        fill(238);
+        textSize(16);
+        text(message, width / 2, height - 20);
+        pop();
+        return;
+      }
+
+      if (gameState === 'victory' && successEndingImage) {
+        const endingSeconds = max(0, (millis() - endingStartedAt) / 1000);
+        const settleProgress = constrain(endingSeconds / 4.5, 0, 1);
+        const zoom = lerp(1.075, 1.012, easeOutCubic(settleProgress));
+        const imageAspect = successEndingImage.width / successEndingImage.height;
+        const canvasAspect = width / height;
+        const coverWidth = imageAspect > canvasAspect ? height * imageAspect : width;
+        const coverHeight = imageAspect > canvasAspect ? height : width / imageAspect;
+
+        push();
+        imageMode(CENTER);
+        image(successEndingImage, width / 2, height / 2, coverWidth * zoom, coverHeight * zoom);
+
+        const warmGlow = 20 + (sin(endingSeconds * 1.8) + 1) * 8;
+        noStroke();
+        fill(255, 194, 112, warmGlow);
+        rect(0, 0, width, height);
+
+        fill(0, 0, 0, 150);
+        rect(0, height - 76, width, 76);
+        fill(120, 255, 128);
+        textFont('MonaS12TextKR');
+        textAlign(CENTER, CENTER);
+        textSize(34);
+        text('백신 개발 완료', width / 2, height - 49);
+        fill(244);
+        textSize(16);
+        text('감염 확산이 저지되었습니다', width / 2, height - 20);
+        pop();
+        return;
+      }
+
+      fill(0, 0, 0, 170);
+      noStroke();
+      rect(0, 0, width, height);
+
+      fill(255);
+      textAlign(CENTER, CENTER);
+      textSize(46);
+      text(gameState === 'victory' ? '승리' : '게임오버', width / 2, height / 2 - 28);
+
+      textSize(20);
+      text(message, width / 2, height / 2 + 20);
+    }
+
+    function easeOutCubic(value) {
+      return 1 - pow(1 - value, 3);
+    }
+
+    function mousePressed() {
+      unlockAudio();
+      if (gameState !== 'playing') {
+        return;
+      }
+
+      for (const door of doors) {
+        const repairRect = door.repairRect;
+        if (repairRect && mouseX >= repairRect.x && mouseX <= repairRect.x + repairRect.w
+          && mouseY >= repairRect.y && mouseY <= repairRect.y + repairRect.h) {
+          repairDoor(door);
+          return;
+        }
+      }
+    }
+
+    function repairDoor(door) {
+      const clickTime = elapsedSeconds;
+      if (clickTimes.length > 0) {
+        clickIntervals.push(clickTime - clickTimes[clickTimes.length - 1]);
+      }
+      clickTimes.push(clickTime);
+      totalRepairs += 1;
+      repairCounts[door.name] += 1;
+      door.durability = min(100, door.durability + DOOR_RECOVERY);
+      message = `${door.name} 내구도 +${DOOR_RECOVERY}%`;
+      recordEvent('door_repair', { door: door.name });
+    }
+
+    async function submitCode() {
+      await unlockAudio();
+      if (gameState !== 'playing') {
+        return;
+      }
+
+      const answer = input.value.trim().toUpperCase();
+      if (answer === currentCode) {
+        vaccineProgress = min(100, vaccineProgress + VACCINE_GAIN);
+        correctCount += 1;
+        message = `정확합니다. 백신 진행도 +${VACCINE_GAIN}%`;
+        recordEvent('code_correct', { submittedCode: answer });
+        currentCode = pickCode();
+        updateTargetCodePanel();
+      } else {
+        typoCount += 1;
+        typoTimes.push(elapsedSeconds);
+        message = '코드가 일치하지 않습니다.';
+        playCodeErrorSound();
+        recordEvent('code_typo', { submittedCode: answer });
+      }
+      input.value = '';
+      input.focus();
+    }
+
+    function pickCode() {
+      const difficultyOrder = ['early', 'mid', 'late'];
+      const phaseIndex = difficultyOrder.indexOf(currentPhase());
+      const adjustment = adaptationState === 'stable' ? 1 : adaptationState === 'overload' ? -1 : 0;
+      const difficultyIndex = constrain(phaseIndex + adjustment, 0, difficultyOrder.length - 1);
+      currentWordDifficulty = difficultyOrder[difficultyIndex];
+
+      const wordPool = CODE_WORDS_BY_DIFFICULTY[currentWordDifficulty];
+      const candidates = wordPool.filter((word) => word !== currentCode);
+      return random(candidates.length ? candidates : wordPool);
+    }
+
+    function updateTargetCodePanel() {
+      targetCodeWord.textContent = currentCode || '----';
+    }
+
+    function currentPhase() {
+      if (elapsedSeconds < 30) return 'early';
+      if (elapsedSeconds < 60) return 'mid';
+      return 'late';
+    }
+
+    function recordEvent(eventType, details = {}) {
+      if (!doors || !eventLog) return;
+
+      const averageDurability = avgDoorDurability();
+      eventLog.push({
+        session_id: sessionId,
+        time_seconds: elapsedSeconds.toFixed(3),
+        event: eventType,
+        result: gameState,
+        phase: currentPhase(),
+        door: details.door || '',
+        submitted_code: details.submittedCode || '',
+        target_code: currentCode || '',
+        target_word_length: currentCode ? currentCode.length : 0,
+        word_difficulty: currentWordDifficulty,
+        north_durability: doors[0].durability.toFixed(2),
+        east_durability: doors[1].durability.toFixed(2),
+        west_durability: doors[2].durability.toFixed(2),
+        south_durability: doors[3].durability.toFixed(2),
+        average_durability: averageDurability.toFixed(2),
+        vaccine_progress: vaccineProgress.toFixed(2),
+        total_repairs: totalRepairs,
+        cps: (totalRepairs / max(elapsedSeconds, 1)).toFixed(3),
+        last_click_interval: clickIntervals.length ? clickIntervals[clickIntervals.length - 1].toFixed(3) : '',
+        average_click_interval: averageValue(clickIntervals).toFixed(3),
+        click_interval_variability: standardDeviation(clickIntervals).toFixed(3),
+        typo_count: typoCount,
+        backspace_count: backspaceCount,
+        correct_code_count: correctCount,
+        wpm: (correctCount / max(elapsedSeconds, 1) * 60).toFixed(3),
+        north_repairs: repairCounts[DOOR_NAMES[0]],
+        east_repairs: repairCounts[DOOR_NAMES[1]],
+        west_repairs: repairCounts[DOOR_NAMES[2]],
+        south_repairs: repairCounts[DOOR_NAMES[3]],
+        north_danger_seconds: dangerSeconds[DOOR_NAMES[0]].toFixed(3),
+        east_danger_seconds: dangerSeconds[DOOR_NAMES[1]].toFixed(3),
+        west_danger_seconds: dangerSeconds[DOOR_NAMES[2]].toFixed(3),
+        south_danger_seconds: dangerSeconds[DOOR_NAMES[3]].toFixed(3),
+        adaptation_state: adaptationState,
+        recent10sTypoCount: recent10sTypoCount(),
+        recent10sRepairCount: recent10sRepairCount(),
+        dangerDoorCount: dangerDoorCount()
+      });
+    }
+
+    function averageValue(values) {
+      if (!values.length) return 0;
+      return values.reduce((sum, value) => sum + value, 0) / values.length;
+    }
+
+    function standardDeviation(values) {
+      if (values.length < 2) return 0;
+      const average = averageValue(values);
+      const variance = values.reduce((sum, value) => sum + (value - average) ** 2, 0) / values.length;
+      return sqrt(variance);
+    }
+
+    function downloadGameLog() {
+      if (!eventLog.length) return;
+
+      const headers = Object.keys(eventLog[0]);
+      downloadCsvFile('game_log.csv', headers, eventLog);
+    }
+
+    function downloadGameSummary() {
+      if (gameState === 'playing') return;
+
+      const summary = {
+        result: gameState,
+        survivalTime: elapsedSeconds.toFixed(3),
+        totalClicks: totalRepairs,
+        cps: (totalRepairs / max(elapsedSeconds, 1)).toFixed(3),
+        avgClickInterval: averageValue(clickIntervals).toFixed(3),
+        clickIntervalVariability: standardDeviation(clickIntervals).toFixed(3),
+        typoCount,
+        backspaceCount,
+        successCount: correctCount,
+        northRepairs: repairCounts[DOOR_NAMES[0]],
+        eastRepairs: repairCounts[DOOR_NAMES[1]],
+        westRepairs: repairCounts[DOOR_NAMES[2]],
+        southRepairs: repairCounts[DOOR_NAMES[3]],
+        dangerTime: Object.values(dangerSeconds).reduce((sum, value) => sum + value, 0).toFixed(3),
+        finalVaccineProgress: vaccineProgress.toFixed(2),
+        stableTime: adaptationTimes.stable.toFixed(3),
+        normalTime: adaptationTimes.normal.toFixed(3),
+        overloadTime: adaptationTimes.overload.toFixed(3),
+        overloadCount,
+        adaptationChangeCount,
+        maxRecent10sRepairCount,
+        maxDangerDoorCount
+      };
+      downloadCsvFile('game_summary.csv', Object.keys(summary), [summary]);
+    }
+
+    function downloadCsvFile(filename, headers, rows) {
+      const csvRows = rows.map((row) => headers.map((header) => csvValue(row[header])).join(','));
+      const csv = '\uFEFF' + [headers.join(','), ...csvRows].join('\r\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = filename;
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+    }
+
+    function csvValue(value) {
+      const text = String(value ?? '');
+      return `"${text.replace(/"/g, '""')}"`;
+    }
+
+    function endGame(nextState, nextMessage) {
+      gameState = nextState;
+      message = nextMessage;
+      endingStartedAt = millis();
+      recordEvent('game_end');
+      if (bgm) {
+        if (nextState === 'gameover' || nextState === 'victory') {
+          bgm.pause();
+        } else {
+          bgm.volume = 0.22;
+        }
+      }
+      if (nextState === 'gameover' && zombieScreech) {
+        zombieScreech.currentTime = 0;
+        zombieScreech.play().catch(() => {
+          // 사용자 입력이 이미 오디오를 활성화한 경우 정상 재생된다.
+        });
+      }
+      if (nextState === 'victory' && victoryChime) {
+        victoryChime.currentTime = 0;
+        victoryChime.play().catch(() => {
+          // 사용자 입력이 이미 오디오를 활성화한 경우 정상 재생된다.
+        });
+      }
+      input.disabled = true;
+      submitButton.disabled = true;
+      input.style.display = 'none';
+      submitButton.style.display = 'none';
+      targetCodePanel.style.display = 'none';
+      endingActions.style.display = 'flex';
+      requestAnimationFrame(syncLeftHudHeight);
+    }
+  </script>
+</body>
+</html>
