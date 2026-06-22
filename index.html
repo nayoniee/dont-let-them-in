@@ -72,11 +72,12 @@
       display: grid;
       grid-template-columns: 260px minmax(0, 1fr);
       gap: 14px;
-      align-items: start;
+      align-items: stretch;
     }
 
     #game-column {
       min-width: 0;
+      height: 100%;
       padding: 10px;
       border: 1px solid rgba(245, 255, 245, 0.42);
       background:
@@ -93,6 +94,8 @@
       gap: 12px;
       grid-template-rows: auto auto minmax(0, 1fr);
       align-content: stretch;
+      min-width: 0;
+      height: 100%;
     }
 
     #game-logo-panel {
@@ -245,6 +248,10 @@
       margin: 8px 0;
     }
 
+    .monitor-metrics {
+      min-width: 0;
+    }
+
     .monitor-label {
       display: flex;
       justify-content: space-between;
@@ -283,17 +290,111 @@
       margin-top: 10px;
     }
 
-    @media (max-width: 1040px) {
+    @media (max-width: 900px) {
       #app-shell {
         grid-template-columns: 1fr;
+      }
+
+      #left-hud {
+        grid-template-columns: minmax(140px, 0.8fr) minmax(180px, 1fr) minmax(300px, 1.8fr);
+        grid-template-rows: auto;
+        align-items: stretch;
+        height: auto;
+      }
+
+      #game-logo-panel {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      #game-logo {
+        max-height: 180px;
       }
 
       #researcher-monitor {
         min-height: 0;
       }
 
+      .monitor-metrics {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        column-gap: 14px;
+      }
+    }
+
+    @media (max-width: 760px) {
+      body {
+        align-items: flex-start;
+      }
+
+      main {
+        padding: 6px;
+      }
+
+      #app-shell {
+        gap: 8px;
+      }
+
       #left-hud {
-        height: auto !important;
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+
+      #game-logo {
+        width: min(360px, 100%);
+        max-height: 132px;
+      }
+
+      #core-status-panel,
+      #researcher-monitor {
+        padding: 12px;
+      }
+
+      #game-column {
+        padding: 5px;
+      }
+
+      #target-code-panel {
+        padding: 10px 12px;
+      }
+
+      #vaccine-panel {
+        padding: 8px;
+        gap: 6px;
+      }
+
+      #code-input {
+        height: 48px;
+        padding: 0 12px;
+        font-size: 18px;
+      }
+
+      #submit-code,
+      #restart-button,
+      #download-log-button,
+      #download-summary-button {
+        height: 48px;
+        padding: 0 14px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .monitor-metrics {
+        grid-template-columns: 1fr;
+      }
+
+      #target-code-word {
+        font-size: 25px;
+      }
+
+      #ending-actions {
+        height: auto;
+        flex-wrap: wrap;
+      }
+
+      #ending-actions button {
+        flex-basis: calc(50% - 4px);
       }
     }
 
@@ -518,17 +619,27 @@
             <polyline id="monitor-heartline" points="0,28 26,28 34,18 42,36 51,28 80,28 88,14 98,40 108,28 140,28 150,22 158,32 168,28 220,28" />
           </svg>
           <div class="monitor-divider"></div>
-          <div class="monitor-row">
-            <div class="monitor-label"><span>긴장 반응</span><span id="monitor-tension-value" class="monitor-value">0%</span></div>
-            <div class="monitor-bar"><div id="monitor-tension-fill" class="monitor-fill"></div></div>
-          </div>
-          <div class="monitor-row">
-            <div class="monitor-label"><span>최근 10초 오타</span><span id="monitor-typo-value" class="monitor-value">0</span></div>
-            <div class="monitor-bar"><div id="monitor-typo-fill" class="monitor-fill"></div></div>
-          </div>
-          <div class="monitor-row">
-            <div class="monitor-label"><span>평균 문 내구도</span><span id="monitor-durability-value" class="monitor-value">100%</span></div>
-            <div class="monitor-bar"><div id="monitor-durability-fill" class="monitor-fill"></div></div>
+          <div class="monitor-metrics">
+            <div class="monitor-row">
+              <div class="monitor-label"><span>긴장 반응</span><span id="monitor-tension-value" class="monitor-value">0%</span></div>
+              <div class="monitor-bar"><div id="monitor-tension-fill" class="monitor-fill"></div></div>
+            </div>
+            <div class="monitor-row">
+              <div class="monitor-label"><span>최근 10초 오타</span><span id="monitor-typo-value" class="monitor-value">0</span></div>
+              <div class="monitor-bar"><div id="monitor-typo-fill" class="monitor-fill"></div></div>
+            </div>
+            <div class="monitor-row">
+              <div class="monitor-label"><span>최근 10초 수리</span><span id="monitor-repair-value" class="monitor-value">0</span></div>
+              <div class="monitor-bar"><div id="monitor-repair-fill" class="monitor-fill"></div></div>
+            </div>
+            <div class="monitor-row">
+              <div class="monitor-label"><span>평균 문 내구도</span><span id="monitor-durability-value" class="monitor-value">100%</span></div>
+              <div class="monitor-bar"><div id="monitor-durability-fill" class="monitor-fill"></div></div>
+            </div>
+            <div class="monitor-row">
+              <div class="monitor-label"><span>위험 문</span><span id="monitor-danger-value" class="monitor-value">0/4</span></div>
+              <div class="monitor-bar"><div id="monitor-danger-fill" class="monitor-fill"></div></div>
+            </div>
           </div>
           <div class="monitor-divider"></div>
           <div id="monitor-effect" class="monitor-note">현재 상태를 분석 중입니다.</div>
@@ -632,12 +743,14 @@
     const monitorTensionFill = document.getElementById('monitor-tension-fill');
     const monitorTypoValue = document.getElementById('monitor-typo-value');
     const monitorTypoFill = document.getElementById('monitor-typo-fill');
+    const monitorRepairValue = document.getElementById('monitor-repair-value');
+    const monitorRepairFill = document.getElementById('monitor-repair-fill');
     const monitorDurabilityValue = document.getElementById('monitor-durability-value');
     const monitorDurabilityFill = document.getElementById('monitor-durability-fill');
+    const monitorDangerValue = document.getElementById('monitor-danger-value');
+    const monitorDangerFill = document.getElementById('monitor-danger-fill');
     const monitorEffect = document.getElementById('monitor-effect');
     const monitorHeartline = document.getElementById('monitor-heartline');
-    const leftHud = document.getElementById('left-hud');
-    const gameLogo = document.getElementById('game-logo');
 
     function preload() {
       laboratoryBackground = loadImage('laboratory-background-game.jpeg');
@@ -645,36 +758,10 @@
       successEndingImage = loadImage('ending-success.png');
     }
 
-    function syncLeftHudHeight() {
-      if (!leftHud) return;
-      const canvasElement = document.querySelector('#game-holder canvas');
-      if (!canvasElement || window.innerWidth <= 1040) {
-        leftHud.style.height = 'auto';
-        leftHud.style.minHeight = '0px';
-        return;
-      }
-
-      const gameColumn = document.getElementById('game-column');
-      if (!gameColumn) return;
-
-      const frameHeight = gameColumn.getBoundingClientRect().height;
-      if (frameHeight > 0) {
-        leftHud.style.height = `${frameHeight}px`;
-        leftHud.style.minHeight = `${frameHeight}px`;
-      }
-    }
-
     function setup() {
       const canvas = createCanvas(960, 540);
       canvas.parent('game-holder');
       textFont('"MonaS12TextKR", "Mona12ColorEmoji", "MonaS12", monospace');
-      syncLeftHudHeight();
-      if ('ResizeObserver' in window) {
-        const canvasElement = document.querySelector('#game-holder canvas');
-        new ResizeObserver(syncLeftHudHeight).observe(canvasElement);
-      }
-      window.addEventListener('resize', syncLeftHudHeight);
-      gameLogo.addEventListener('load', syncLeftHudHeight);
       bgm = new Audio('empty-labyrinth-bgm.mp3');
       bgm.loop = true;
       bgm.preload = 'auto';
@@ -1193,11 +1280,15 @@
 
       const display = adaptationDisplay();
       const recentTypos = recent10sTypoCount();
+      const recentRepairs = recent10sRepairCount();
       const averageDurability = avgDoorDurability();
+      const dangerDoors = dangerDoorCount();
       const tension = round(horrorIntensity() * 100);
       const remainingSeconds = max(0, ceil(PLAY_TIME_SECONDS - elapsedSeconds));
       const remainingPercent = constrain((remainingSeconds / PLAY_TIME_SECONDS) * 100, 0, 100);
       const typoPressure = constrain(recentTypos / 3, 0, 1) * 100;
+      const repairPressure = constrain(recentRepairs / 8, 0, 1) * 100;
+      const dangerPressure = constrain(dangerDoors / 2, 0, 1) * 100;
       const heartbeatLift = adaptationState === 'overload' ? 8 : adaptationState === 'normal' ? 4 : 0;
       const heartlinePoints = `0,28 26,28 34,${18 - heartbeatLift} 42,${36 + heartbeatLift} 51,28 80,28 88,${14 - heartbeatLift} 98,${40 + heartbeatLift} 108,28 140,28 150,${22 - heartbeatLift / 2} 158,${32 + heartbeatLift / 2} 168,28 220,28`;
 
@@ -1210,8 +1301,12 @@
       monitorTensionFill.style.width = `${tension}%`;
       monitorTypoValue.textContent = `${recentTypos}`;
       monitorTypoFill.style.width = `${typoPressure}%`;
+      monitorRepairValue.textContent = `${recentRepairs}`;
+      monitorRepairFill.style.width = `${repairPressure}%`;
       monitorDurabilityValue.textContent = `${round(averageDurability)}%`;
       monitorDurabilityFill.style.width = `${constrain(averageDurability, 0, 100)}%`;
+      monitorDangerValue.textContent = `${dangerDoors}/4`;
+      monitorDangerFill.style.width = `${dangerPressure}%`;
       monitorEffect.textContent = display.effect;
       monitorHeartline.setAttribute('points', heartlinePoints);
     }
@@ -1707,7 +1802,6 @@
       submitButton.style.display = 'none';
       targetCodePanel.style.display = 'none';
       endingActions.style.display = 'flex';
-      requestAnimationFrame(syncLeftHudHeight);
     }
   </script>
 </body>
